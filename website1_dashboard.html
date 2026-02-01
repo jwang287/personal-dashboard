@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Tech News Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            border-bottom: 2px solid #cccccc;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666666;
+            font-size: 0.9rem;
+        }
+
+        /* API Key Section */
+        .api-section {
+            background-color: #f5f5f5;
+            border: 1px solid #cccccc;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .api-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .api-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .api-input-group label {
+            min-width: 120px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .api-input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            border: 1px solid #cccccc;
+            font-family: Arial, sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .api-input-group button {
+            padding: 8px 20px;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .api-input-group button:hover {
+            background-color: #333333;
+        }
+
+        .api-status {
+            font-size: 0.85rem;
+            color: #666666;
+            margin-top: 5px;
+        }
+
+        .api-status.ready {
+            color: #008000;
+        }
+
+        .api-status.error {
+            color: #cc0000;
+        }
+
+        /* Section Styling */
+        section {
+            border: 1px solid #cccccc;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #cccccc;
+        }
+
+        /* Metal Prices Section */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .metal-prices {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #cccccc;
+        }
+
+        .metal-price-item {
+            text-align: center;
+            padding: 15px 25px;
+            border: 1px solid #cccccc;
+            min-width: 150px;
+        }
+
+        .metal-price-item h4 {
+            font-size: 0.9rem;
+            color: #666666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .metal-price-item .price {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .metal-price-item .change {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .metal-price-item .change.up {
+            color: #008000;
+        }
+
+        .metal-price-item .change.down {
+            color: #cc0000;
+        }
+
+        /* News Sections */
+        .news-list {
+            list-style: none;
+        }
+
+        .news-item {
+            border-bottom: 1px solid #eeeeee;
+            padding: 15px 0;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .news-item h3 a {
+            color: #000000;
+            text-decoration: none;
+        }
+
+        .news-item h3 a:hover {
+            text-decoration: underline;
+        }
+
+        .news-meta {
+            font-size: 0.85rem;
+            color: #666666;
+            margin-bottom: 8px;
+        }
+
+        .news-desc {
+            font-size: 0.95rem;
+            color: #333333;
+            line-height: 1.5;
+        }
+
+        /* Error Message */
+        .error-message {
+            background-color: #fff3f3;
+            border: 1px solid #cc0000;
+            color: #cc0000;
+            padding: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666666;
+            padding: 20px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 2px solid #cccccc;
+            padding-top: 20px;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666666;
+        }
+
+        .update-time {
+            font-weight: bold;
+            color: #000000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            section {
+                padding: 15px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            .metal-prices {
+                flex-direction: column;
+            }
+
+            .metal-price-item {
+                width: 100%;
+            }
+
+            .api-input-group {
+                flex-direction: column;
+            }
+
+            .api-input-group input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Personal Tech News Dashboard</h1>
+        <p class="subtitle">Real-time metals & technology news aggregator</p>
+    </header>
+
+    <!-- API Configuration Section -->
+    <section class="api-section">
+        <h3>🔑 API Configuration</h3>
+        <p style="font-size: 0.9rem; margin-bottom: 15px; color: #666;">
+            Please enter your API keys to enable data fetching. 
+            <a href="https://www.goldapi.io/" target="_blank">Get GoldAPI Key</a> | 
+            <a href="https://newsapi.org/" target="_blank">Get NewsAPI Key</a>
+        </p>
+        
+        <div class="api-input-group">
+            <label>GoldAPI Key:</label>
+            <input type="password" id="goldApiKey" placeholder="Enter GoldAPI.io key">
+            <button onclick="saveGoldApiKey()">Save</button>
+        </div>
+        <div class="api-status" id="goldApiStatus">Status: Not configured</div>
+
+        <div class="api-input-group" style="margin-top: 15px;">
+            <label>NewsAPI Key:</label>
+            <input type="password" id="newsApiKey" placeholder="Enter NewsAPI.org key">
+            <button onclick="saveNewsApiKey()">Save</button>
+        </div>
+        <div class="api-status" id="newsApiStatus">Status: Not configured</div>
+    </section>
+
+    <!-- Metal Prices Section -->
+    <section id="metals-section">
+        <h2>💰 Precious Metals Prices (USD)</h2>
+        <div id="metals-error" class="error-message" style="display: none;">
+            Data unavailable, retrying in 5 minutes...
+        </div>
+        <div class="chart-container">
+            <canvas id="metalsChart"></canvas>
+        </div>
+        <div class="metal-prices" id="metalPrices">
+            <div class="metal-price-item">
+                <h4>Gold (XAU)</h4>
+                <div class="price" id="goldPrice">--</div>
+                <div class="change" id="goldChange">--</div>
+            </div>
+            <div class="metal-price-item">
+                <h4>Silver (XAG)</h4>
+                <div class="price" id="silverPrice">--</div>
+                <div class="change" id="silverChange">--</div>
+            </div>
+            <div class="metal-price-item">
+                <h4>Copper (HG)</h4>
+                <div class="price" id="copperPrice">--</div>
+                <div class="change" id="copperChange">--</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nanjing News Section -->
+    <section id="nanjing-news">
+        <h2>📍 Nanjing Local News</h2>
+        <div id="nanjing-error" class="error-message" style="display: none;">
+            News data unavailable, retrying in 30 minutes...
+        </div>
+        <div class="loading" id="nanjing-loading">Loading news...</div>
+        <ul class="news-list" id="nanjing-news-list"></ul>
+    </section>
+
+    <!-- AI News Section -->
+    <section id="ai-news">
+        <h2>🤖 AI Field News</h2>
+        <div id="ai-error" class="error-message" style="display: none;">
+            News data unavailable, retrying in 30 minutes...
+        </div>
+        <div class="loading" id="ai-loading">Loading news...</div>
+        <ul class="news-list" id="ai-news-list"></ul>
+    </section>
+
+    <!-- OpenClaw News Section -->
+    <section id="openclaw-news">
+        <h2>🔧 OpenClaw / AI Assistant News</h2>
+        <div id="openclaw-error" class="error-message" style="display: none;">
+            News data unavailable, retrying in 30 minutes...
+        </div>
+        <div class="loading" id="openclaw-loading">Loading news...</div>
+        <ul class="news-list" id="openclaw-news-list"></ul>
+    </section>
+
+    <footer>
+        <p>Last updated: <span class="update-time" id="lastUpdate">Never</span></p>
+        <p style="margin-top: 10px; font-size: 0.8rem;">
+            Metals refresh every 5 min | News refresh every 30 min
+        </p>
+    </footer>
+
+    <script>
+        // API Keys storage
+        let goldApiKey = localStorage.getItem('goldApiKey') || '';
+        let newsApiKey = localStorage.getItem('newsApiKey') || '';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            if (goldApiKey) {
+                document.getElementById('goldApiKey').value = goldApiKey;
+                document.getElementById('goldApiStatus').textContent = 'Status: Ready';
+                document.getElementById('goldApiStatus').className = 'api-status ready';
+                fetchMetalPrices();
+            }
+            if (newsApiKey) {
+                document.getElementById('newsApiKey').value = newsApiKey;
+                document.getElementById('newsApiStatus').textContent = 'Status: Ready';
+                document.getElementById('newsApiStatus').className = 'api-status ready';
+                fetchAllNews();
+            }
+            
+            // Set up auto-refresh intervals
+            setInterval(fetchMetalPrices, 5 * 60 * 1000); // 5 minutes
+            setInterval(fetchAllNews, 30 * 60 * 1000); // 30 minutes
+        });
+
+        // Save API keys
+        function saveGoldApiKey() {
+            goldApiKey = document.getElementById('goldApiKey').value.trim();
+            localStorage.setItem('goldApiKey', goldApiKey);
+            document.getElementById('goldApiStatus').textContent = 'Status: Ready';
+            document.getElementById('goldApiStatus').className = 'api-status ready';
+            fetchMetalPrices();
+        }
+
+        function saveNewsApiKey() {
+            newsApiKey = document.getElementById('newsApiKey').value.trim();
+            localStorage.setItem('newsApiKey', newsApiKey);
+            document.getElementById('newsApiStatus').textContent = 'Status: Ready';
+            document.getElementById('newsApiStatus').className = 'api-status ready';
+            fetchAllNews();
+        }
+
+        // Metal prices data storage
+        let metalsData = {
+            labels: [],
+            gold: [],
+            silver: [],
+            copper: []
+        };
+
+        let metalsChart = null;
+
+        // Fetch metal prices
+        async function fetchMetalPrices() {
+            if (!goldApiKey) {
+                document.getElementById('metals-error').style.display = 'block';
+                document.getElementById('metals-error').textContent = 'Please configure GoldAPI key first';
+                return;
+            }
+
+            try {
+                const metals = ['XAU', 'XAG', 'HG'];
+                const prices = {};
+                
+                for (const metal of metals) {
+                    const response = await fetch(`https://www.goldapi.io/api/${metal}/USD`, {
+                        headers: {
+                            'x-access-token': goldApiKey,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) throw new Error(`Failed to fetch ${metal}`);
+                    
+                    const data = await response.json();
+                    prices[metal] = {
+                        price: data.price,
+                        change: data.chg,
+                        changePercent: data.chg_pct
+                    };
+                }
+
+                // Update display
+                updateMetalDisplay(prices);
+                updateChart(prices);
+                
+                document.getElementById('metals-error').style.display = 'none';
+                updateTimestamp();
+                
+            } catch (error) {
+                console.error('Error fetching metal prices:', error);
+                document.getElementById('metals-error').style.display = 'block';
+                document.getElementById('metals-error').textContent = 'Data unavailable, retrying in 5 minutes...';
+            }
+        }
+
+        function updateMetalDisplay(prices) {
+            // Gold
+            document.getElementById('goldPrice').textContent = `$${prices.XAU.price.toLocaleString()}`;
+            const goldChangeEl = document.getElementById('goldChange');
+            goldChangeEl.textContent = `${prices.XAU.change >= 0 ? '+' : ''}${prices.XAU.change.toFixed(2)} (${prices.XAU.changePercent.toFixed(2)}%)`;
+            goldChangeEl.className = `change ${prices.XAU.change >= 0 ? 'up' : 'down'}`;
+
+            // Silver
+            document.getElementById('silverPrice').textContent = `$${prices.XAG.price.toFixed(2)}`;
+            const silverChangeEl = document.getElementById('silverChange');
+            silverChangeEl.textContent = `${prices.XAG.change >= 0 ? '+' : ''}${prices.XAG.change.toFixed(2)} (${prices.XAG.changePercent.toFixed(2)}%)`;
+            silverChangeEl.className = `change ${prices.XAG.change >= 0 ? 'up' : 'down'}`;
+
+            // Copper
+            if (prices.HG) {
+                document.getElementById('copperPrice').textContent = `$${prices.HG.price.toFixed(2)}`;
+                const copperChangeEl = document.getElementById('copperChange');
+                copperChangeEl.textContent = `${prices.HG.change >= 0 ? '+' : ''}${prices.HG.change.toFixed(2)} (${prices.HG.changePercent.toFixed(2)}%)`;
+                copperChangeEl.className = `change ${prices.HG.change >= 0 ? 'up' : 'down'}`;
+            }
+        }
+
+        function updateChart(prices) {
+            const now = new Date().toLocaleTimeString();
+            
+            // Keep last 24 hours of data (assuming 5-min intervals = 288 points max)
+            if (metalsData.labels.length > 288) {
+                metalsData.labels.shift();
+                metalsData.gold.shift();
+                metalsData.silver.shift();
+                metalsData.copper.shift();
+            }
+
+            metalsData.labels.push(now);
+            metalsData.gold.push(prices.XAU.price);
+            metalsData.silver.push(prices.XAG.price);
+            metalsData.copper.push(prices.HG ? prices.HG.price : 0);
+
+            if (!metalsChart) {
+                const ctx = document.getElementById('metalsChart').getContext('2d');
+                metalsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: metalsData.labels,
+                        datasets: [
+                            {
+                                label: 'Gold (XAU)',
+                                data: metalsData.gold,
+                                borderColor: '#FFD700',
+                                backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Silver (XAG)',
+                                data: metalsData.silver,
+                                borderColor: '#C0C0C0',
+                                backgroundColor: 'rgba(192, 192, 192, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Copper (HG)',
+                                data: metalsData.copper,
+                                borderColor: '#B87333',
+                                backgroundColor: 'rgba(184, 115, 51, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Price (USD)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            } else {
+                metalsChart.update('none');
+            }
+        }
+
+        // Fetch news
+        async function fetchAllNews() {
+            if (!newsApiKey) {
+                document.getElementById('nanjing-error').style.display = 'block';
+                document.getElementById('ai-error').style.display = 'block';
+                document.getElementById('openclaw-error').style.display = 'block';
+                return;
+            }
+
+            await Promise.all([
+                fetchNanjingNews(),
+                fetchAINews(),
+                fetchOpenClawNews()
+            ]);
+            
+            updateTimestamp();
+        }
+
+        async function fetchNanjingNews() {
+            try {
+                document.getElementById('nanjing-loading').style.display = 'block';
+                
+                // Using 'china' as country and 'nanjing' as query
+                const response = await fetch(
+                    `https://newsapi.org/v2/top-headlines?country=cn&q=nanjing&pageSize=10&apiKey=${newsApiKey}`
+                );
+                
+                if (!response.ok) throw new Error('Failed to fetch Nanjing news');
+                
+                const data = await response.json();
+                displayNews(data.articles, 'nanjing-news-list');
+                document.getElementById('nanjing-loading').style.display = 'none';
+                document.getElementById('nanjing-error').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error fetching Nanjing news:', error);
+                document.getElementById('nanjing-loading').style.display = 'none';
+                document.getElementById('nanjing-error').style.display = 'block';
+            }
+        }
+
+        async function fetchAINews() {
+            try {
+                document.getElementById('ai-loading').style.display = 'block';
+                
+                const response = await fetch(
+                    `https://newsapi.org/v2/everything?q=artificial+intelligence+AI+technology&sortBy=publishedAt&pageSize=10&apiKey=${newsApiKey}`
+                );
+                
+                if (!response.ok) throw new Error('Failed to fetch AI news');
+                
+                const data = await response.json();
+                displayNews(data.articles, 'ai-news-list');
+                document.getElementById('ai-loading').style.display = 'none';
+                document.getElementById('ai-error').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error fetching AI news:', error);
+                document.getElementById('ai-loading').style.display = 'none';
+                document.getElementById('ai-error').style.display = 'block';
+            }
+        }
+
+        async function fetchOpenClawNews() {
+            try {
+                document.getElementById('openclaw-loading').style.display = 'block';
+                
+                // Search for OpenClaw, Moltbot, and related AI assistant terms
+                const response = await fetch(
+                    `https://newsapi.org/v2/everything?q=OpenClaw+Moltbot+AI+assistant+autonomous+agent&sortBy=publishedAt&pageSize=10&apiKey=${newsApiKey}`
+                );
+                
+                if (!response.ok) throw new Error('Failed to fetch OpenClaw news');
+                
+                const data = await response.json();
+                
+                // If no results, show message
+                if (data.articles.length === 0) {
+                    document.getElementById('openclaw-news-list').innerHTML = 
+                        '<li class="news-item"><p style="color: #666;">No specific OpenClaw news found. Try broadening search terms.</p></li>';
+                } else {
+                    displayNews(data.articles, 'openclaw-news-list');
+                }
+                
+                document.getElementById('openclaw-loading').style.display = 'none';
+                document.getElementById('openclaw-error').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error fetching OpenClaw news:', error);
+                document.getElementById('openclaw-loading').style.display = 'none';
+                document.getElementById('openclaw-error').style.display = 'block';
+            }
+        }
+
+        function displayNews(articles, elementId) {
+            const list = document.getElementById(elementId);
+            list.innerHTML = '';
+            
+            articles.forEach(article => {
+                const li = document.createElement('li');
+                li.className = 'news-item';
+                
+                const date = new Date(article.publishedAt).toLocaleString();
+                const description = article.description || 'No description available';
+                
+                li.innerHTML = `
+                    <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+                    <div class="news-meta">${article.source.name} | ${date}</div>
+                    <p class="news-desc">${description}</p>
+                `;
+                
+                list.appendChild(li);
+            });
+        }
+
+        function updateTimestamp() {
+            const now = new Date().toLocaleString();
+            document.getElementById('lastUpdate').textContent = now;
+        }
+    </script>
+</body>
+</html>
